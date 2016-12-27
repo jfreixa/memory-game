@@ -8,8 +8,9 @@ import GameOverState from './states/GameOver'
 class Game extends Phaser.Game {
 
   constructor () {
-    let width = 500
-    let height = 500
+    let gameRatio = window.innerWidth / window.innerHeight
+    let width = Math.ceil(1080 * gameRatio)
+    let height = 1080
 
     super(width, height, Phaser.AUTO, 'content', null)
 
