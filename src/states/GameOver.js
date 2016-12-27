@@ -8,9 +8,9 @@ export default class extends Phaser.State {
 
   create () {
     this.localStorageName = 'jordiFreixa'
-    this.highScore = localStorage.getItem(this.localStorageName) == null ? 0 : localStorage.getItem(this.localStorageName)
+    this.highScore = window.localStorage.getItem(this.localStorageName) == null ? 0 : window.localStorage.getItem(this.localStorageName)
     this.highScore = Math.max(this.score, this.highScore)
-    localStorage.setItem(this.localStorageName, this.highScore)
+    window.localStorage.setItem(this.localStorageName, this.highScore)
     let style = {
       font: '32px Monospace',
       fill: '#00ff00',
