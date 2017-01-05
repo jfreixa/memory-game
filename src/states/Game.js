@@ -1,119 +1,58 @@
-/* globals __DEV__ */
 import Phaser from 'phaser'
+import { centerGameObjects } from '../utils'
+import Background from '../sprites/Background.js'
+import Tiles from '../sprites/Tiles.js'
 
 export default class extends Phaser.State {
   init (soundActivated) {
     this.soundActivated = soundActivated
+    this.decreaseTime = this.decreaseTime.bind(this)
+    this.scored = this.scored.bind(this)
+    this.plusTime = this.plusTime.bind(this)
   }
-  preload () { }
 
   create () {
-    this.game.stage.disableVisibilityChange = true
-    this.tileSize = 80
-    this.numRows = 4
-    this.numCols = 5
-    this.tileSpacing = 10
-    this.tilesArray = []
-    this.selectedArray = []
-    this.soundArray = []
-    this.score = 0
-    this.timeLeft = 60
-    this.placeTiles()
-    this.soundArray[0] = this.game.add.audio('select', 1)
-    this.soundArray[1] = this.game.add.audio('right', 1)
-    this.soundArray[2] = this.game.add.audio('wrong', 1)
-    var style = {
-      font: '32px Monospace',
-      fill: '#00ff00',
-      align: 'center'
-    }
-    this.scoreText = this.game.add.text(5, 5, `Score: ${this.score}`, style)
-    this.timeText = this.game.add.text(5, this.game.height - 5, `Time left: ${this.timeLeft}`, style)
-    this.timeText.anchor.set(0, 1)
-    this.game.time.events.loop(Phaser.Timer.SECOND, this.decreaseTime, this)
-  }
-  placeTiles () {
-    this.tilesLeft = this.numRows * this.numCols
-    let leftSpace = this.calculateSpace(this.game.width, this.numCols)
-    let topSpace = this.calculateSpace(this.game.height, this.numRows)
-    let tileSpace = this.tileSize + this.tileSpacing
-    for (let i = 0; i < this.numRows * this.numCols; i++) {
-      this.tilesArray.push(Math.floor(i / 2))
-    }
-    for (let i = 0; i < this.numRows * this.numCols; i++) {
-      let from = this.game.rnd.between(0, this.tilesArray.length - 1)
-      let to = this.game.rnd.between(0, this.tilesArray.length - 1)
-      let temp = this.tilesArray[from]
-      this.tilesArray[from] = this.tilesArray[to]
-      this.tilesArray[to] = temp
-    }
-    for (let i = 0; i < this.numCols; i++) {
-      for (let j = 0; j < this.numRows; j++) {
-        let tile = this.game.add.button(leftSpace + i * tileSpace, topSpace + j * tileSpace, 'tiles', this.showTile, this)
-        tile.frame = 10
-        tile.value = this.tilesArray[j * this.numCols + i]
-      }
-    }
-  }
+    this.game.score = 0
+    this.game.timeLeft = 60
 
-  showTile (target) {
-    if (this.selectedArray.length < 2 && this.selectedArray.indexOf(target) === -1) {
-      this.playSound(0)
-      target.frame = target.value
-      this.selectedArray.push(target)
-      if (this.selectedArray.length === 2) {
-        this.game.time.events.add(Phaser.Timer.SECOND, this.checkTiles, this)
-      }
-    }
-  }
+    this.game.background = new Background({
+      game: this.game,
+      asset: undefined,
+      velocityX: 0
+    })
 
-  checkTiles () {
-    if (this.selectedArray[0].value === this.selectedArray[1].value) {
-      this.playSound(1)
-      this.scored()
-      this.timeLeft += 2
-      this.timeText.text = `Time left: ${this.timeLeft}`
-      this.selectedArray[0].destroy()
-      this.selectedArray[1].destroy()
-      this.tilesLeft -= 2
-      if (this.tilesLeft === 0) {
-        this.tilesArray.length = 0
-        this.selectedArray.length = 0
-        this.placeTiles()
-      }
-    } else {
-      this.playSound(2)
-      this.selectedArray[0].frame = 10
-      this.selectedArray[1].frame = 10
-    }
-    this.selectedArray.length = 0
-  }
+    this.game.tiles = new Tiles({
+      game: this.game,
+      x: 0,
+      y: 0,
+      asset: 'tiles',
+      scored: this.scored,
+      plusTime: this.plusTime,
+      soundActivated: this.soundActivated
+    })
 
-  calculateSpace (allowedSpace, numberTiles) {
-    return (allowedSpace - (numberTiles * this.tileSize) - ((numberTiles - 1) * this.tileSpacing)) / 2
-  }
+    this.game.scoreText = this.game.add.text(this.game.world.centerX, this.game.height - 100, `Score: ${this.game.score}`, this.game.customStyle)
+    this.game.timeText = this.game.add.text(this.game.world.centerX, this.game.height - 50, `Time left: ${this.game.timeLeft}`, this.game.customStyle)
+    centerGameObjects([this.game.scoreText, this.game.timeText])
 
-  playSound (numberSound) {
-    if (this.soundActivated) {
-      this.soundArray[numberSound].play()
-    }
+    this.game.time.events.loop(Phaser.Timer.SECOND, this.decreaseTime)
   }
 
   scored () {
-    this.score++
-    this.scoreText.text = `Score: ${this.score}`
+    this.game.score++
+    this.game.scoreText.text = `Score: ${this.game.score}`
+  }
+
+  plusTime () {
+    this.game.timeLeft += 2
+    this.game.timeText.text = `Time left: ${this.game.timeLeft}`
   }
 
   decreaseTime () {
-    this.timeLeft--
-    this.timeText.text = `Time left: ${this.timeLeft}`
-    if (this.timeLeft === 0) {
-      this.game.state.start('GameOver', true, false, this.score)
-    }
-  }
-
-  render () {
-    if (__DEV__) {
+    this.game.timeLeft--
+    this.game.timeText.text = `Time left: ${this.game.timeLeft}`
+    if (this.game.timeLeft === 0) {
+      this.game.state.start('GameOver', true, false, this.game.score)
     }
   }
 }
