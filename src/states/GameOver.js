@@ -26,6 +26,6 @@ export default class extends Phaser.State {
   }
 
   restartGame () {
-    this.game.state.start('Title')
+    this.game.state.start('Start')
   }
 }

@@ -68,7 +68,7 @@ export default class extends Phaser.Sprite {
       target.frame = target.value
       this.selectedArray.push(target)
       if (this.selectedArray.length === 2) {
-        this.game.time.events.add(Phaser.Timer.SECOND, this.checkTiles, this)
+        this.game.time.events.add(Phaser.Timer.SECOND * 0.5, this.checkTiles, this)
       }
     }
   }
